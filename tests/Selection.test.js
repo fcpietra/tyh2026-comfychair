@@ -93,3 +93,109 @@ describe("Article selection - redondeo", function () {
     });
 });
 
+describe("Article selection - empates en el puntaje", function () {
+    it("Debe aceptar papers incluso cuando hay empates en el límite", function () {
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
+        let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [2, 2, 2]);
+        let p3 = createPaperWithScore("P3", author, [reviewer1, reviewer2, reviewer3], [2, 2, 2]);
+        let p4 = createPaperWithScore("P4", author, [reviewer1, reviewer2, reviewer3], [0, 0, 0]);
+
+        // 4 artículos, 50% → 2 aceptados. p2 y p3 tienen la misma puntuación
+        setupSessionWithPapers([p1, p2, p3, p4], 50);
+
+        let accepted = session.selectArticles();
+
+        expect(accepted).toHaveLength(2);
+        expect(accepted[0]).toBe(p1);
+        // uno de los papers con puntaje 2 es aceptado
+        expect(accepted[1].score()).toBe(2);
+    });
+
+    it("Debe aceptar la cantidad correcta de papers incluso cuando todos los papers tienen el mismo puntaje", function () {
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
+        let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
+        let p3 = createPaperWithScore("P3", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
+        let p4 = createPaperWithScore("P4", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
+
+        setupSessionWithPapers([p1, p2, p3, p4], 50);
+
+        let accepted = session.selectArticles();
+
+        expect(accepted).toHaveLength(2);
+    });
+});
+
+describe("Article selection - porcentaje 0 y 100", function () {
+    it("Debe aceptar ningún paper con 0% de aceptación", function () {
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
+        let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [2, 2, 2]);
+
+        setupSessionWithPapers([p1, p2], 0);
+
+        let accepted = session.selectArticles();
+
+        expect(accepted).toHaveLength(0);
+    });
+
+    it("Debe aceptar todos los papers con 100% de aceptación", function () {
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
+        let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
+        let p3 = createPaperWithScore("P3", author, [reviewer1, reviewer2, reviewer3], [-1, -1, -1]);
+
+        setupSessionWithPapers([p1, p2, p3], 100);
+
+        let accepted = session.selectArticles();
+
+        expect(accepted).toHaveLength(3);
+        expect(accepted[0]).toBe(p1);
+        expect(accepted[1]).toBe(p2);
+        expect(accepted[2]).toBe(p3);
+    });
+});
+
+describe("Article selection - validación de etapa", function () {
+    it("Debe lanzar error al seleccionar fuera de la etapa de selección", function () {
+        session = new Session();
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = new Paper("P1", [author], author);
+        session.submit(p1);
+
+        let selection = function () { session.selectArticles(); };
+
+        expect(selection).toThrow("No se pueden seleccionar artículos en esta etapa");
+    });
+
+    it("Debe lanzar error por porcentaje de aceptación inválido", function () {
+        session = new Session();
+
+        let invalidNegative = function () { session.setAcceptancePercentage(-10); };
+        let invalidOver100 = function () { session.setAcceptancePercentage(110); };
+
+        expect(invalidNegative).toThrow("Percentage must be between 0 and 100");
+        expect(invalidOver100).toThrow("Percentage must be between 0 and 100");
+    });
+});
+
+describe("Article selection - los papers aceptados son accesibles", function () {
+    it("Debe guardar los papers aceptados después de la selección", function () {
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
+        let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [-1, -1, -1]);
+
+        setupSessionWithPapers([p1, p2], 50);
+
+        session.selectArticles();
+
+        expect(session.acceptedPapers()).toHaveLength(1);
+        expect(session.acceptedPapers()[0]).toBe(p1);
+    });
+
+    it("Debe retornar papers vacíos antes de la selección", function () {
+        session = new Session();
+        expect(session.acceptedPapers()).toHaveLength(0);
+    });
+});
