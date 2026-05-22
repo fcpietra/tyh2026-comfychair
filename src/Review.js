@@ -2,7 +2,7 @@ class Review{
     constructor(reviewer, text, score){
         this._reviewer = reviewer;
         this._text = text;
-        this._score = this.validateScoreRange(score, true);
+        this._score = this.validateScoreRange(score);
     }
     reviewer(){
         return this._reviewer;
@@ -13,14 +13,15 @@ class Review{
     score(){
         return this._score;
     }
-    validateScoreRange(score, throwError) {
-        const isValid = score <= 3 && score >= -3 && Number.isInteger(score)
-
-        if(throwError && !isValid) {
-            throw new Error("Score is out of range")
+    validateScoreRange(score) {
+        if (!Number.isInteger(score)) {
+            throw new Error("Score must be an integer");
         }
 
-        return score
+        if (score < -3 || score > 3) {
+            throw new Error("Score is out of range");
+        }
+        return score;
     }
 }
 
