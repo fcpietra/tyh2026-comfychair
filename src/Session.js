@@ -1,12 +1,18 @@
 const {Bid, Interests} = require("./Bid");
 
+const STAGES = {
+    receiving: "Receiving",
+    bidding: "Bidding",
+    reviewing: "Reviewing"
+}
+
 class Session{
     constructor(){
         this._name = "";
         this._programCommittee=[];
         this._papers=[];
         this._bids=[];
-        this._stage="Receiving";
+        this._stage=STAGES.receiving;
     }
     name(){
         return this._name;
@@ -21,15 +27,15 @@ class Session{
         this._programCommittee.push(user);
     }
     canSubmit(paper){
-        if (this.stage() == "Receiving" )
+        if (this.stage() == STAGES.receiving )
             return paper.isValid();
-        else 
+        else
             return false;
     }
     submit(paper){
         if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
-        
-        if (this.stage() == "Receiving" )
+
+        if (this.stage() == STAGES.receiving )
             this._papers.push(paper);
         else
             throw new Error("Cannot submit papers at this stage");
@@ -47,10 +53,10 @@ class Session{
         this._stage = stage;
     }
     closeSubmissions(){
-        this.setStage("Bidding");
+        this.setStage(STAGES.bidding);
     }
     enterBid(paper, reviewer, interest){
-        if (this.stage() == "Bidding" )
+        if (this.stage() == STAGES.bidding )
             if(this.bidExistsFor(paper, reviewer)){
                 let existing =  this.bidFor(paper, reviewer);
                 existing.setInterest(interest);
@@ -74,3 +80,4 @@ class Session{
 }
 
 module.exports = Session;
+module.exports.STAGES = STAGES;
