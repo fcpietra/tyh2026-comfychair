@@ -34,6 +34,13 @@ class Session{
         else
             throw new Error("Cannot submit papers at this stage");
     }
+    submitReview(paper, reviewer, text, score) {
+        if (this.stage() !== 'Reviewing')
+            throw new Error("Cannot review at this stage.");
+
+        //TODO: metodo para validar asignacion del paper al reviewer
+        paper.addReview(reviewer, text, score);
+    }
     papers(){
         return this._papers;
     }
@@ -48,6 +55,11 @@ class Session{
     }
     closeSubmissions(){
         this.setStage("Bidding");
+    }
+    closeBidding(){
+        if (this.stage() !== "Bidding")
+            throw new Error("Can only close bidding from the Bidding stage.");
+        this.setStage("Reviewing");
     }
     enterBid(paper, reviewer, interest){
         if (this.stage() == "Bidding" )
