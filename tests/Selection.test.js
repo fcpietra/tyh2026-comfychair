@@ -29,8 +29,8 @@ beforeEach(function () {
     reviewer3 = new User("Reviewer Three", "UNLP", "r3@unlp.edu", "123");
 });
 
-describe("Selección de pappers: límite exacto", function () {
-    it("Debe aceptar exactamente el 30% de 10 papers (3 papers)", function () {
+describe("Article selection - exact limit", function () {
+    it("Should accept exactly 30% of 10 papers (3 papers)", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let paperList = [];
         for (let i = 0; i < 10; i++) {
@@ -44,7 +44,7 @@ describe("Selección de pappers: límite exacto", function () {
         expect(accepted).toHaveLength(3);
     });
 
-    it("Debe aceptar los papers con los puntajes más altos", function () {
+    it("Should accept papers with the highest scores", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let paperHigh = createPaperWithScore("High Score", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
         let paperMid = createPaperWithScore("Mid Score", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
@@ -61,8 +61,8 @@ describe("Selección de pappers: límite exacto", function () {
     });
 });
 
-describe("Article selection - redondeo", function () {
-    it("Debe redondear hacia abajo cuando el porcentaje no produce un número entero", function () {
+describe("Article selection - rounding", function () {
+    it("Should round down when the percentage does not produce a whole number", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
         let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [2, 2, 2]);
@@ -77,7 +77,7 @@ describe("Article selection - redondeo", function () {
         expect(accepted[0]).toBe(p1);
     });
 
-    it("Debe redondear hacia abajo con 7 papers y 40%", function () {
+    it("Should round down with 7 papers and 40%", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let paperList = [];
         for (let i = 0; i < 7; i++) {
@@ -93,26 +93,26 @@ describe("Article selection - redondeo", function () {
     });
 });
 
-describe("Article selection - empates en el puntaje", function () {
-    it("Debe aceptar papers incluso cuando hay empates en el límite", function () {
+describe("Article selection - score ties", function () {
+    it("Should accept papers even when there are ties at the cutoff", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
         let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [2, 2, 2]);
         let p3 = createPaperWithScore("P3", author, [reviewer1, reviewer2, reviewer3], [2, 2, 2]);
         let p4 = createPaperWithScore("P4", author, [reviewer1, reviewer2, reviewer3], [0, 0, 0]);
 
-        // 4 artículos, 50% → 2 aceptados. p2 y p3 tienen la misma puntuación
+        // 4 articles, 50% → 2 accepted. p2 and p3 have the same score
         setupSessionWithPapers([p1, p2, p3, p4], 50);
 
         let accepted = session.selectArticles();
 
         expect(accepted).toHaveLength(2);
         expect(accepted[0]).toBe(p1);
-        // uno de los papers con puntaje 2 es aceptado
+        // one of the papers with score 2 is accepted
         expect(accepted[1].score()).toBe(2);
     });
 
-    it("Debe aceptar la cantidad correcta de papers incluso cuando todos los papers tienen el mismo puntaje", function () {
+    it("Should accept the correct number of papers even when all papers have the same score", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
         let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
@@ -127,8 +127,8 @@ describe("Article selection - empates en el puntaje", function () {
     });
 });
 
-describe("Article selection - porcentaje 0 y 100", function () {
-    it("Debe aceptar ningún paper con 0% de aceptación", function () {
+describe("Article selection - 0 and 100 percentage", function () {
+    it("Should accept no papers with 0% acceptance", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
         let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [2, 2, 2]);
@@ -140,7 +140,7 @@ describe("Article selection - porcentaje 0 y 100", function () {
         expect(accepted).toHaveLength(0);
     });
 
-    it("Debe aceptar todos los papers con 100% de aceptación", function () {
+    it("Should accept all papers with 100% acceptance", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
         let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]);
@@ -157,8 +157,8 @@ describe("Article selection - porcentaje 0 y 100", function () {
     });
 });
 
-describe("Article selection - validación de etapa", function () {
-    it("Debe lanzar error al seleccionar fuera de la etapa de selección", function () {
+describe("Article selection - stage validation", function () {
+    it("Should throw an error when selecting outside the selection stage", function () {
         session = new Session();
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let p1 = new Paper("P1", [author], author);
@@ -169,7 +169,7 @@ describe("Article selection - validación de etapa", function () {
         expect(selection).toThrow("No se pueden seleccionar artículos en esta etapa");
     });
 
-    it("Debe lanzar error por porcentaje de aceptación inválido", function () {
+    it("Should throw an error for an invalid acceptance percentage", function () {
         session = new Session();
 
         let invalidNegative = function () { session.setAcceptancePercentage(-10); };
@@ -180,8 +180,8 @@ describe("Article selection - validación de etapa", function () {
     });
 });
 
-describe("Article selection - los papers aceptados son accesibles", function () {
-    it("Debe guardar los papers aceptados después de la selección", function () {
+describe("Article selection - accepted papers are accessible", function () {
+    it("Should store accepted papers after selection", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
         let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [-1, -1, -1]);
@@ -194,7 +194,7 @@ describe("Article selection - los papers aceptados son accesibles", function () 
         expect(session.acceptedPapers()[0]).toBe(p1);
     });
 
-    it("Debe retornar papers vacíos antes de la selección", function () {
+    it("Should return empty papers before selection", function () {
         session = new Session();
         expect(session.acceptedPapers()).toHaveLength(0);
     });
