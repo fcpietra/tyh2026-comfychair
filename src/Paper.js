@@ -18,11 +18,10 @@ class Paper{
         return (this._title !== "") && (this._authors.length > 0);
     }
     addReview(reviewer, review, score){
-        if (!this.canAddReview()) throw new Error("Cannot allow any more reviews");
-        this._reviews.push(new Review(reviewer, review, score));
-    }
-    canAddReview(){
-        return this.reviewsCount() < this.constructor.allowedReviews;
+        const canAddReview = this.reviewsCount() < this.constructor.allowedReviews
+        if (canAddReview)
+            this._reviews.push(new Review(reviewer, review, score));
+        else throw(new Error("Cannot allow any more reviews"))
     }
     reviewsCount(){
         return this.reviews().length;
