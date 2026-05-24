@@ -29,8 +29,8 @@ class Session {
     addReviewer(user) {
         this._programCommittee.push(user);
     }
-    canSubmit(paper){
-        if (this.stage() == STAGES.receiving )
+    canSubmit(paper) {
+        if (this.stage() == STAGES.receiving)
             return paper.isValid();
         else
             return false;
@@ -38,7 +38,7 @@ class Session {
     submit(paper) {
         if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
 
-        if (this.stage() == STAGES.receiving )
+        if (this.stage() == STAGES.receiving)
             this._papers.push(paper);
         else
             throw new Error("Cannot submit papers at this stage");
@@ -55,13 +55,13 @@ class Session {
     setStage(stage) {
         this._stage = stage;
     }
-    closeSubmissions(){
+    closeSubmissions() {
         this.setStage(STAGES.bidding);
     }
-    enterBid(paper, reviewer, interest){
-        if (this.stage() == STAGES.bidding )
-            if(this.bidExistsFor(paper, reviewer)){
-                let existing =  this.bidFor(paper, reviewer);
+    enterBid(paper, reviewer, interest) {
+        if (this.stage() == STAGES.bidding)
+            if (this.bidExistsFor(paper, reviewer)) {
+                let existing = this.bidFor(paper, reviewer);
                 existing.setInterest(interest);
             }
             else {
@@ -89,7 +89,7 @@ class Session {
     }
     selectArticles() {
         if (this.stage() !== STAGES.selection)
-            throw new Error("No se pueden seleccionar artículos en esta etapa");
+            throw new Error("Cannot select articles at this stage");
 
         let sortedPapers = [...this._papers].sort(function (a, b) {
             return b.score() - a.score();
