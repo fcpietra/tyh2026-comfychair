@@ -166,7 +166,7 @@ describe("Article selection - stage validation", function () {
 
         let selection = function () { session.selectArticles(); };
 
-        expect(selection).toThrow("No se pueden seleccionar artículos en esta etapa");
+        expect(selection).toThrow("Cannot select articles at this stage");
     });
 
     it("Should throw an error for an invalid acceptance percentage", function () {
