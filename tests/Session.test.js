@@ -71,6 +71,9 @@ describe("During the bidding process, a Session", ()=>{
 
 describe("During the reviewing process, a Session", ()=>{
     beforeEach(()=>{
+        asse.addReviewer(juan);
+        asse.addReviewer(julian);
+        asse.addReviewer(matias);
         asse.submit(paper01);
         asse.closeSubmissions();
         asse.closeBidding();
@@ -102,7 +105,11 @@ describe("During the reviewing process, a Session", ()=>{
         expect(invalidScore).toThrow("Score is out of range");
     })
 
-    it.todo("should reject a review from a reviewer not assigned to the paper")
+    it("should reject a review from a reviewer not assigned to the paper", ()=>{
+        const carlos = new User("Carlos Pereira", "LIFIA, UNLP", "cpereira@lifia.ar", "123");
+        let unassignedReview = ()=>{asse.submitReview(paper01, carlos, "ok", 1)};
+        expect(unassignedReview).toThrow("Reviewer is not assigned to this paper.");
+    })
 })
 describe("When closing bidding, a Session", ()=>{
     it("should change stage to Revision", ()=>{

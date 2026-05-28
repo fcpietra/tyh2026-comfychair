@@ -38,10 +38,12 @@ class Session {
             throw new Error("Cannot submit papers at this stage");
     }
     submitReview(paper, reviewer, text, score) {
-        if (this.stage() !== 'Reviewing')
+        if (this.stage() !== SessionStatesEnum.REVISION)
             throw new Error("Cannot review at this stage.");
 
-        //TODO: metodo para validar asignacion del paper al reviewer
+        if (!this.assignmentsFor(paper).includes(reviewer))
+            throw new Error("Reviewer is not assigned to this paper.");
+
         paper.addReview(reviewer, text, score);
     }
     papers(){
@@ -58,11 +60,6 @@ class Session {
     }
     closeSubmissions() {
         this.setStage(SessionStatesEnum.BIDDING);
-    }
-    closeBidding(){
-        if (this.stage() !== "Bidding")
-            throw new Error("Can only close bidding from the Bidding stage.");
-        this.setStage("Reviewing");
     }
     enterBid(paper, reviewer, interest) {
         if (this.stage() == SessionStatesEnum.BIDDING)
