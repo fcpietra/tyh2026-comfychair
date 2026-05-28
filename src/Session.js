@@ -55,11 +55,11 @@ class Session {
     stage() {
         return this._stage;
     }
-    setStage(stage) {
+    _setStage(stage) {
         this._stage = stage;
     }
     closeSubmissions() {
-        this.setStage(SessionStatesEnum.BIDDING);
+        this._setStage(SessionStatesEnum.BIDDING);
     }
     enterBid(paper, reviewer, interest) {
         if (this.stage() == SessionStatesEnum.BIDDING)
@@ -109,7 +109,19 @@ class Session {
             });
         }.bind(this));
 
-        this.setStage(SessionStatesEnum.REVISION);
+        this._setStage(SessionStatesEnum.REVISION);
+    }
+    closeReviewing() {
+        if (this.stage() !== SessionStatesEnum.REVISION)
+            throw new Error("Cannot close reviewing from the current stage.");
+
+        const allReviewed = this._papers.every(function (paper) {
+            return paper.reviewsCount() === 3;
+        });
+        if (!allReviewed)
+            throw new Error("All papers must have 3 reviews before closing reviewing.");
+
+        this._setStage(SessionStatesEnum.SELECTION);
     }
     bidExistsFor(paper, reviewer) {
         return typeof (this.bidFor(paper, reviewer)) != "undefined";
