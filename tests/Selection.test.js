@@ -1,6 +1,7 @@
 const Session = require("../src/Session");
 const User = require("../src/User");
 const Paper = require("../src/Paper");
+const SessionStatesEnum = require("../src/Enums/SessionStatesEnum");
 
 let session;
 let reviewer1, reviewer2, reviewer3;
@@ -20,7 +21,7 @@ function setupSessionWithPapers(paperList, acceptancePercentage) {
         session.submit(paper);
     });
     session.setAcceptancePercentage(acceptancePercentage);
-    session._setStage("Selection");
+    session._setStage(SessionStatesEnum.SELECTION);
 }
 
 beforeEach(function () {
