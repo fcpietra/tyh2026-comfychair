@@ -20,7 +20,7 @@ function setupSessionWithPapers(paperList, acceptancePercentage) {
         session.submit(paper);
     });
     session.setAcceptancePercentage(acceptancePercentage);
-    session.setStage("Selection");
+    session._setStage("Selection");
 }
 
 beforeEach(function () {
