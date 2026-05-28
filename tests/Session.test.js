@@ -69,6 +69,48 @@ describe("During the bidding process, a Session", ()=>{
     })
 })
 
+describe("During the reviewing process, a Session", ()=>{
+    beforeEach(()=>{
+        asse.addReviewer(juan);
+        asse.addReviewer(julian);
+        asse.addReviewer(matias);
+        asse.submit(paper01);
+        asse.closeSubmissions();
+        asse.closeBidding();
+    })
+
+    it("should accept a review on an assigned paper", ()=>{
+        asse.submitReview(paper01, julian, "Solid contribution", 2);
+        expect(paper01.reviews()).toHaveLength(1);
+        expect(paper01.score()).toBe(2);
+    })
+
+    it("should reject reviews when not in Reviewing stage", ()=>{
+        const newSession = new Session();
+        newSession.submit(paper02);
+        let earlyReview = ()=>{newSession.submitReview(paper02, julian, "ok", 1)};
+        expect(earlyReview).toThrow("Cannot review at this stage.");
+    })
+
+    it("should reject a fourth review on the same paper", ()=>{
+        asse.submitReview(paper01, juan, "ok", 1);
+        asse.submitReview(paper01, julian, "ok", 2);
+        asse.submitReview(paper01, matias, "ok", 3);
+        let fourth = ()=>{asse.submitReview(paper01, julian, "extra", 0)};
+        expect(fourth).toThrow("Cannot allow any more reviews");
+    })
+
+    it("should reject reviews with invalid score", ()=>{
+        let invalidScore = ()=>{asse.submitReview(paper01, julian, "ok", 5)};
+        expect(invalidScore).toThrow("Score is out of range");
+    })
+
+    it("should reject a review from a reviewer not assigned to the paper", ()=>{
+        const carlos = new User("Carlos Pereira", "LIFIA, UNLP", "cpereira@lifia.ar", "123");
+        let unassignedReview = ()=>{asse.submitReview(paper01, carlos, "ok", 1)};
+        expect(unassignedReview).toThrow("Reviewer is not assigned to this paper.");
+    })
+})
 describe("When closing bidding, a Session", ()=>{
     it("should change stage to Revision", ()=>{
         asse.addReviewer(juan);

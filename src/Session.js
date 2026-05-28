@@ -37,7 +37,16 @@ class Session {
         else
             throw new Error("Cannot submit papers at this stage");
     }
-    papers() {
+    submitReview(paper, reviewer, text, score) {
+        if (this.stage() !== SessionStatesEnum.REVISION)
+            throw new Error("Cannot review at this stage.");
+
+        if (!this.assignmentsFor(paper).includes(reviewer))
+            throw new Error("Reviewer is not assigned to this paper.");
+
+        paper.addReview(reviewer, text, score);
+    }
+    papers(){
         return this._papers;
     }
     bids() {

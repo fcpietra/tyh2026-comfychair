@@ -33,8 +33,12 @@ describe("Article selection - exact limit", function () {
     it("Should accept exactly 30% of 10 papers (3 papers)", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let paperList = [];
+        const scoreSets = [
+            [-3, -3, -3], [-3, -3, -2], [-3, -2, -2], [-2, -2, -2], [-2, -2, -1],
+            [-1, -1, -1], [0, 0, 0], [1, 1, 1], [2, 2, 2], [3, 3, 3]
+        ];
         for (let i = 0; i < 10; i++) {
-            let paper = createPaperWithScore("Paper " + (i + 1), author, [reviewer1, reviewer2, reviewer3], [i - 4, i - 3, i - 5]);
+            let paper = createPaperWithScore("Paper " + (i + 1), author, [reviewer1, reviewer2, reviewer3], scoreSets[i]);
             paperList.push(paper);
         }
         setupSessionWithPapers(paperList, 30);
@@ -81,7 +85,7 @@ describe("Article selection - rounding", function () {
         let author = new User("Author", "UBA", "a@uba.ar", "123");
         let paperList = [];
         for (let i = 0; i < 7; i++) {
-            let paper = createPaperWithScore("Paper " + (i + 1), author, [reviewer1, reviewer2, reviewer3], [i, i, i]);
+            let paper = createPaperWithScore("Paper " + (i + 1), author, [reviewer1, reviewer2, reviewer3], [i - 3, i - 3, i - 3]);
             paperList.push(paper);
         }
         // 7 papers, 40% → floor(2.8) = 2
