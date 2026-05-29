@@ -140,8 +140,11 @@ class Session {
     }
     _selectReviewersForPaper(paper, quotas, assignmentCounts) {
         const available = this._programCommittee.filter(function (reviewer) {
-            return assignmentCounts.get(reviewer) < quotas.get(reviewer);
-        });
+            const hasQuota = assignmentCounts.get(reviewer) < quotas.get(reviewer);
+            const hasConflict = this.bidExistsFor(paper, reviewer)
+                && this.interestFor(paper, reviewer) === Interests.Conflict;
+            return hasQuota && !hasConflict;
+        }.bind(this));
         const interested = [];
         const maybe = [];
         const noBid = [];

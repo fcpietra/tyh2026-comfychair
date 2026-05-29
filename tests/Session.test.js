@@ -360,4 +360,78 @@ describe("When closing bidding, a Session", ()=>{
             asse.enterBid(paper01, juan, Interests.Interested);
         }).toThrow();
     })
+
+    it("should not assign a reviewer who declared Conflict on a paper", ()=>{
+        const session = new Session();
+        const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
+        const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
+        const rev3 = new User("Rev 3", "Univ", "r3@test.com", "pass");
+        const rev4 = new User("Rev 4", "Univ", "r4@test.com", "pass");
+        const rev5 = new User("Rev 5", "Univ", "r5@test.com", "pass");
+        session.addReviewer(rev1);
+        session.addReviewer(rev2);
+        session.addReviewer(rev3);
+        session.addReviewer(rev4);
+        session.addReviewer(rev5);
+
+        const author1 = new User("Author 1", "Univ", "a1@test.com", "pass");
+        const author2 = new User("Author 2", "Univ", "a2@test.com", "pass");
+        const paper1 = new Paper("Paper 1", [author1], author1);
+        const paper2 = new Paper("Paper 2", [author2], author2);
+        session.submit(paper1);
+        session.submit(paper2);
+        session.closeSubmissions();
+
+        // rev1 declares conflict on paper1
+        session.enterBid(paper1, rev1, Interests.Conflict);
+        session.enterBid(paper1, rev2, Interests.Interested);
+        session.enterBid(paper1, rev3, Interests.Interested);
+        session.enterBid(paper1, rev4, Interests.Maybe);
+
+        session.closeBidding();
+
+        const assigned = session.assignmentsFor(paper1);
+        expect(assigned).toHaveLength(3);
+        expect(assigned).not.toContain(rev1);
+    })
+
+    it("should still assign a reviewer with Conflict on one paper to other papers", ()=>{
+        const session = new Session();
+        const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
+        const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
+        const rev3 = new User("Rev 3", "Univ", "r3@test.com", "pass");
+        const rev4 = new User("Rev 4", "Univ", "r4@test.com", "pass");
+        session.addReviewer(rev1);
+        session.addReviewer(rev2);
+        session.addReviewer(rev3);
+        session.addReviewer(rev4);
+
+        const author1 = new User("Author 1", "Univ", "a1@test.com", "pass");
+        const author2 = new User("Author 2", "Univ", "a2@test.com", "pass");
+        const paper1 = new Paper("Paper 1", [author1], author1);
+        const paper2 = new Paper("Paper 2", [author2], author2);
+        session.submit(paper1);
+        session.submit(paper2);
+        session.closeSubmissions();
+
+        // rev1 has conflict only on paper1
+        session.enterBid(paper1, rev1, Interests.Conflict);
+
+        session.closeBidding();
+
+        // rev1 should NOT be assigned to paper1
+        expect(session.assignmentsFor(paper1)).not.toContain(rev1);
+        // rev1 CAN be assigned to paper2
+        expect(session.assignmentsFor(paper2)).toContain(rev1);
+    })
+
+    it("should allow a reviewer to declare Conflict during bidding", ()=>{
+        asse.addReviewer(juan);
+        asse.submit(paper01);
+        asse.closeSubmissions();
+
+        asse.enterBid(paper01, juan, Interests.Conflict);
+        expect(asse.bidExistsFor(paper01, juan)).toBe(true);
+        expect(asse.interestFor(paper01, juan)).toBe(Interests.Conflict);
+    })
 })
