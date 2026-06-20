@@ -2,6 +2,9 @@ const Session = require("../src/Session");
 const User = require("../src/User");
 const Paper = require("../src/Paper");
 const SessionStatesEnum = require("../src/Enums/SessionStatesEnum");
+const AcceptanceByCount = require("../src/Policies/AcceptanceByCount");
+const AcceptanceByScoreThreshold = require("../src/Policies/AcceptanceByScoreThreshold");
+const AcceptanceByPercentage = require("../src/Policies/AcceptanceByPercentage");
 
 let session;
 let reviewer1, reviewer2, reviewer3;
@@ -20,7 +23,7 @@ function setupSessionWithPapers(paperList, acceptancePercentage) {
     paperList.forEach(function (paper) {
         session.submit(paper);
     });
-    session.setAcceptancePercentage(acceptancePercentage);
+    session.setAcceptancePolicy(new AcceptanceByPercentage(acceptancePercentage));
     session._setStage(SessionStatesEnum.SELECTION);
 }
 
@@ -175,10 +178,8 @@ describe("Article selection - stage validation", function () {
     });
 
     it("Should throw an error for an invalid acceptance percentage", function () {
-        session = new Session();
-
-        let invalidNegative = function () { session.setAcceptancePercentage(-10); };
-        let invalidOver100 = function () { session.setAcceptancePercentage(110); };
+        let invalidNegative = function () { session.setAcceptancePolicy(new AcceptanceByPercentage(-10)); };
+        let invalidOver100 = function () { session.setAcceptancePolicy(new AcceptanceByPercentage(110)); };
 
         expect(invalidNegative).toThrow("Percentage must be between 0 and 100");
         expect(invalidOver100).toThrow("Percentage must be between 0 and 100");
@@ -202,5 +203,65 @@ describe("Article selection - accepted papers are accessible", function () {
     it("Should return empty papers before selection", function () {
         session = new Session();
         expect(session.acceptedPapers()).toHaveLength(0);
+    });
+});
+
+describe("Article selection - AcceptanceByCount Policy", function () {
+    it("Should accept exactly the requested count of papers in order of descending score", function () {
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]); // score 3
+        let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]); // score 1
+        let p3 = createPaperWithScore("P3", author, [reviewer1, reviewer2, reviewer3], [-2, -2, -2]); // score -2
+
+        session = new Session();
+        session.submit(p1);
+        session.submit(p2);
+        session.submit(p3);
+        session.setAcceptancePolicy(new AcceptanceByCount(2));
+        session._setStage(SessionStatesEnum.SELECTION);
+
+        let accepted = session.selectArticles();
+        expect(accepted).toHaveLength(2);
+        expect(accepted[0]).toBe(p1);
+        expect(accepted[1]).toBe(p2);
+    });
+
+    it("Should return all papers if count is greater than the total number of papers", function () {
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]);
+
+        session = new Session();
+        session.submit(p1);
+        session.setAcceptancePolicy(new AcceptanceByCount(5));
+        session._setStage(SessionStatesEnum.SELECTION);
+
+        let accepted = session.selectArticles();
+        expect(accepted).toHaveLength(1);
+    });
+
+    it("Should throw error if count is negative", function () {
+        expect(function () { new AcceptanceByCount(-1); }).toThrow("Count must be positive");
+    });
+});
+
+describe("Article selection - AcceptanceByScoreThreshold Policy", function () {
+    it("Should accept only papers whose score is greater than or equal to the threshold", function () {
+        let author = new User("Author", "UBA", "a@uba.ar", "123");
+        let p1 = createPaperWithScore("P1", author, [reviewer1, reviewer2, reviewer3], [3, 3, 3]); // score 3
+        let p2 = createPaperWithScore("P2", author, [reviewer1, reviewer2, reviewer3], [1, 1, 1]); // score 1
+        let p3 = createPaperWithScore("P3", author, [reviewer1, reviewer2, reviewer3], [-2, -2, -2]); // score -2
+
+        session = new Session();
+        session.submit(p1);
+        session.submit(p2);
+        session.submit(p3);
+        session.setAcceptancePolicy(new AcceptanceByScoreThreshold(1.0));
+        session._setStage(SessionStatesEnum.SELECTION);
+
+        let accepted = session.selectArticles();
+        expect(accepted).toHaveLength(2);
+        expect(accepted).toContain(p1);
+        expect(accepted).toContain(p2);
+        expect(accepted).not.toContain(p3);
     });
 });
