@@ -7,11 +7,7 @@ class AcceptanceByCount extends AcceptancePolicy {
         this._count = count;
     }
 
-    select(papers) {
-        let sortedPapers = [...papers].sort(function (a, b) {
-            return b.score() - a.score();
-        });
-
+    _selectFromSorted(sortedPapers) {
         return sortedPapers.slice(0, this._count);
     }
 }

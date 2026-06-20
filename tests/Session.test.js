@@ -15,9 +15,11 @@ beforeEach( ()=> {
     juan = new User("Juan Gardey", "LIFIA, UNLP", "jgardey@lifia.ar", "123");
     julian = new User("Julián Grigera", "LIFIA, UNLP", "jgrigera@lifia.ar", "123");
     matias = new User("Matias Urbieta", "LIFIA, UNLP", "murbieta@lifia.ar", "123");
-    paper01 = new Paper("A new approach on something", [juan, julian], juan);
-    paper02 = new Paper("Another approach on something else", [matias, julian], matias);
-    paper03 = new Paper("Yet another approach on something", [juan, matias], juan);
+    const authorA = new User("Author A", "Univ A", "a@test.com", "123");
+    const authorB = new User("Author B", "Univ B", "b@test.com", "123");
+    paper01 = new Paper("A new approach on something", [authorA, authorB], authorA);
+    paper02 = new Paper("Another approach on something else", [authorB], authorB);
+    paper03 = new Paper("Yet another approach on something", [authorA], authorA);
 });
 
 describe("A new Session", () =>{
@@ -443,5 +445,32 @@ describe("When closing bidding, a Session", ()=>{
         asse.enterBid(paper01, juan, Interests.Conflict);
         expect(asse.bidExistsFor(paper01, juan)).toBe(true);
         expect(asse.interestFor(paper01, juan)).toBe(Interests.Conflict);
+    })
+
+    it("should not assign a reviewer who is an author of the paper (automatic conflict of interest)", ()=>{
+        const session = new Session();
+        const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
+        const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
+        const rev3 = new User("Rev 3", "Univ", "r3@test.com", "pass");
+        const rev4 = new User("Rev 4", "Univ", "r4@test.com", "pass");
+        session.addReviewer(rev1);
+        session.addReviewer(rev2);
+        session.addReviewer(rev3);
+        session.addReviewer(rev4);
+
+        const otherAuthor = new User("Other Author", "Univ", "other@test.com", "pass");
+        const paper1 = new Paper("Paper 1", [rev1], rev1);
+        const paper2 = new Paper("Paper 2", [otherAuthor], otherAuthor);
+        session.submit(paper1);
+        session.submit(paper2);
+        session.close();
+        session.close();
+
+        const assigned = session.assignmentsFor(paper1);
+        expect(assigned).toHaveLength(3);
+        expect(assigned).not.toContain(rev1);
+        expect(assigned).toContain(rev2);
+        expect(assigned).toContain(rev3);
+        expect(assigned).toContain(rev4);
     })
 })

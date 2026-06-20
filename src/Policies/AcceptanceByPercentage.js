@@ -7,12 +7,8 @@ class AcceptanceByPercentage extends AcceptancePolicy {
         this._percentage = percentage;
     }
 
-    select(papers) {
-        let sortedPapers = [...papers].sort(function (a, b) {
-            return b.score() - a.score();
-        });
-
-        let maxAccepted = Math.floor(this._percentage / 100 * papers.length);
+    _selectFromSorted(sortedPapers) {
+        let maxAccepted = Math.floor(this._percentage / 100 * sortedPapers.length);
         return sortedPapers.slice(0, maxAccepted);
     }
 }
