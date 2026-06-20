@@ -6,10 +6,7 @@ class AcceptanceByScoreThreshold extends AcceptancePolicy {
         this._threshold = threshold;
     }
 
-    select(papers) {
-        let sortedPapers = [...papers].sort(function (a, b) {
-            return b.score() - a.score();
-        });
+    _selectFromSorted(sortedPapers) {
         return sortedPapers.filter(paper => paper.score() >= this._threshold);
     }
 }
