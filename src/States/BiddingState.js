@@ -15,7 +15,7 @@ class BiddingState extends SessionState {
             this.session.bids().push(bid);
         }
     }
-    closeBidding() {
+    close() {
         this.session._assignReviewers();
         const RevisionState = require('./RevisionState');
         this.session._setStage(new RevisionState(this.session));

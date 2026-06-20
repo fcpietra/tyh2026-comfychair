@@ -29,7 +29,7 @@ console.log('Stage:', session.stage());
 console.log('Papers enviados:', session.papers().map(p => p.title()));
 console.log('Revisores:', session.reviewers().map(r => r.fullName));
 
-session.closeSubmissions();
+session.close();
 console.log('\n--- Bidding ---');
 console.log('Stage:', session.stage());
 
@@ -47,7 +47,7 @@ session.enterBid(p3, r5, Interests.Interested);
 
 console.log('Bids cargados:', session.bids().length);
 
-session.closeBidding();
+session.close();
 console.log('\n--- Asignacion ---');
 console.log('Stage:', session.stage());
 session.papers().forEach(function (paper) {
@@ -86,7 +86,7 @@ try {
 }
 
 console.log('\n--- Seleccion ---');
-session.closeReviewing();
+session.close();
 session.setAcceptancePercentage(70);
 const aceptados = session.selectArticles();
 console.log('Aceptados:', aceptados.map(p => `${p.title()} (${p.score().toFixed(2)})`));

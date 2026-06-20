@@ -12,7 +12,7 @@ class ReceivingState extends SessionState {
         if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
         this.session.papers().push(paper);
     }
-    closeSubmissions() {
+    close() {
         const BiddingState = require('./BiddingState');
         this.session._setStage(new BiddingState(this.session));
     }

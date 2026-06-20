@@ -11,7 +11,7 @@ class RevisionState extends SessionState {
 
         paper.addReview(reviewer, text, score);
     }
-    closeReviewing() {
+    close() {
         const allReviewed = this.session.papers().every(function (paper) {
             return paper.reviewsCount() === 3;
         });

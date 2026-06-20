@@ -35,17 +35,11 @@ class Session {
     submitReview(paper, reviewer, text, score) {
         this._state.submitReview(paper, reviewer, text, score);
     }
-    closeSubmissions() {
-        this._state.closeSubmissions();
+    close() {
+        this._state.close();
     }
     enterBid(paper, reviewer, interest) {
         this._state.enterBid(paper, reviewer, interest);
-    }
-    closeBidding() {
-        this._state.closeBidding();
-    }
-    closeReviewing() {
-        this._state.closeReviewing();
     }
     selectArticles() {
         this._acceptedPapers = this._state.selectArticles();
