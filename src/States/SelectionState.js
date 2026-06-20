@@ -6,7 +6,7 @@ class SelectionState extends SessionState {
         return SessionStatesEnum.SELECTION;
     }
     selectArticles() {
-        return this.session._applyAcceptancePolicy();
+        return this.session.acceptancePolicy().select(this.session.papers());
     }
 }
 module.exports = SelectionState;

@@ -171,22 +171,11 @@ class Session {
         return prioritized.slice(0, 3);
     }
 
-    // Policies
-    setAcceptancePercentage(percentage) {
-        this._acceptancePolicy = new AcceptanceByPercentage(percentage);
-    }
-    acceptancePercentage() {
-        if (this._acceptancePolicy instanceof AcceptanceByPercentage) {
-            return this._acceptancePolicy._percentage;
-        }
-        return 0;
-    }
-    
     setAcceptancePolicy(policy) {
         this._acceptancePolicy = policy;
     }
-    _applyAcceptancePolicy() {
-        return this._acceptancePolicy.select(this._papers);
+    acceptancePolicy() {
+        return this._acceptancePolicy;
     }
 
     acceptedPapers() {

@@ -87,6 +87,7 @@ try {
 
 console.log('\n--- Seleccion ---');
 session.close();
-session.setAcceptancePercentage(70);
+const AcceptanceByPercentage = require('./Policies/AcceptanceByPercentage');
+session.setAcceptancePolicy(new AcceptanceByPercentage(70));
 const aceptados = session.selectArticles();
 console.log('Aceptados:', aceptados.map(p => `${p.title()} (${p.score().toFixed(2)})`));
