@@ -1,5 +1,6 @@
 const { Bid, Interests } = require("./Bid");
-const SessionStatesEnum = require("./Enums/SessionStatesEnum");
+const ReceivingState = require("./States/ReceivingState");
+const AcceptanceByPercentage = require("./Policies/AcceptanceByPercentage");
 
 class Session {
     constructor() {
@@ -7,8 +8,8 @@ class Session {
         this._programCommittee = [];
         this._papers = [];
         this._bids = [];
-        this._stage = SessionStatesEnum.RECEIVING;
-        this._acceptancePercentage = 0;
+        this._state = new ReceivingState(this);
+        this._acceptancePolicy = new AcceptanceByPercentage(0);
         this._acceptedPapers = [];
     }
     name() {
@@ -23,29 +24,29 @@ class Session {
     addReviewer(user) {
         this._programCommittee.push(user);
     }
+    
+    // Delegated to State
     canSubmit(paper) {
-        if (this.stage() == SessionStatesEnum.RECEIVING)
-            return paper.isValid();
-        else
-            return false;
+        return this._state.canSubmit(paper);
     }
     submit(paper) {
-        if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
-
-        if (this.stage() == SessionStatesEnum.RECEIVING)
-            this._papers.push(paper);
-        else
-            throw new Error("Cannot submit papers at this stage");
+        this._state.submit(paper);
     }
     submitReview(paper, reviewer, text, score) {
-        if (this.stage() !== SessionStatesEnum.REVISION)
-            throw new Error("Cannot review at this stage.");
-
-        if (!this.assignmentsFor(paper).includes(reviewer))
-            throw new Error("Reviewer is not assigned to this paper.");
-
-        paper.addReview(reviewer, text, score);
+        this._state.submitReview(paper, reviewer, text, score);
     }
+    close() {
+        this._state.close();
+    }
+    enterBid(paper, reviewer, interest) {
+        this._state.enterBid(paper, reviewer, interest);
+    }
+    selectArticles() {
+        this._acceptedPapers = this._state.selectArticles();
+        return this._acceptedPapers;
+    }
+
+    // Accessors
     papers(){
         return this._papers;
     }
@@ -53,31 +54,53 @@ class Session {
         return this._bids;
     }
     stage() {
-        return this._stage;
+        return this._state.stage();
     }
-    _setStage(stage) {
-        this._stage = stage;
-    }
-    closeSubmissions() {
-        this._setStage(SessionStatesEnum.BIDDING);
-    }
-    enterBid(paper, reviewer, interest) {
-        if (this.stage() == SessionStatesEnum.BIDDING)
-            if (this.bidExistsFor(paper, reviewer)) {
-                let existing = this.bidFor(paper, reviewer);
-                existing.setInterest(interest);
+    _setStage(stateOrEnum) {
+        if (typeof stateOrEnum === 'string') {
+            const SessionStatesEnum = require('./Enums/SessionStatesEnum');
+            switch (stateOrEnum) {
+                case SessionStatesEnum.RECEIVING:
+                    const ReceivingState = require("./States/ReceivingState");
+                    this._state = new ReceivingState(this);
+                    break;
+                case SessionStatesEnum.BIDDING:
+                    const BiddingState = require("./States/BiddingState");
+                    this._state = new BiddingState(this);
+                    break;
+                case SessionStatesEnum.REVISION:
+                    const RevisionState = require("./States/RevisionState");
+                    this._state = new RevisionState(this);
+                    break;
+                case SessionStatesEnum.SELECTION:
+                    const SelectionState = require("./States/SelectionState");
+                    this._state = new SelectionState(this);
+                    break;
+                default:
+                    this._state = stateOrEnum;
             }
-            else {
-                let bid = new Bid(paper, reviewer, interest);
-                this._bids.push(bid);
-            }
-        else
-            throw new Error("Cannot enter bids from the current stage.");
+        } else {
+            this._state = stateOrEnum;
+        }
     }
-    closeBidding() {
-        if (this.stage() != SessionStatesEnum.BIDDING)
-            throw new Error("Cannot close bidding from the current stage.");
+    
+    bidExistsFor(paper, reviewer) {
+        return typeof (this.bidFor(paper, reviewer)) != "undefined";
+    }
+    bidFor(paper, reviewer) {
+        return this._bids.find((suspect) => (suspect.paper() == paper) && (suspect.reviewer() == reviewer));
+    }
+    interestFor(paper, reviewer) {
+        return this.bidFor(paper, reviewer).interest();
+    }
+    assignments() {
+        return this._assignments;
+    }
+    assignmentsFor(paper) {
+        return this._assignments.get(paper) || [];
+    }
 
+    _assignReviewers() {
         const totalPapers = this.papers().length;
         const totalReviewers = this.reviewers().length;
         const totalReviews = totalPapers * 3;
@@ -108,41 +131,14 @@ class Session {
                 assignmentCounts.set(reviewer, assignmentCounts.get(reviewer) + 1);
             });
         }.bind(this));
+    }
 
-        this._setStage(SessionStatesEnum.REVISION);
-    }
-    closeReviewing() {
-        if (this.stage() !== SessionStatesEnum.REVISION)
-            throw new Error("Cannot close reviewing from the current stage.");
-
-        const allReviewed = this._papers.every(function (paper) {
-            return paper.reviewsCount() === 3;
-        });
-        if (!allReviewed)
-            throw new Error("All papers must have 3 reviews before closing reviewing.");
-
-        this._setStage(SessionStatesEnum.SELECTION);
-    }
-    bidExistsFor(paper, reviewer) {
-        return typeof (this.bidFor(paper, reviewer)) != "undefined";
-    }
-    bidFor(paper, reviewer) {
-        return this._bids.find((suspect) => (suspect.paper() == paper) && (suspect.reviewer() == reviewer));
-    }
-    interestFor(paper, reviewer) {
-        return this.bidFor(paper, reviewer).interest();
-    }
-    assignments() {
-        return this._assignments;
-    }
-    assignmentsFor(paper) {
-        return this._assignments.get(paper) || [];
-    }
     _selectReviewersForPaper(paper, quotas, assignmentCounts) {
         const available = this._programCommittee.filter(function (reviewer) {
             const hasQuota = assignmentCounts.get(reviewer) < quotas.get(reviewer);
-            const hasConflict = this.bidExistsFor(paper, reviewer)
-                && this.interestFor(paper, reviewer) === Interests.Conflict;
+            const isAuthor = paper.authors && paper.authors().includes(reviewer);
+            const hasConflict = (this.bidExistsFor(paper, reviewer)
+                && this.interestFor(paper, reviewer) === Interests.Conflict) || isAuthor;
             return hasQuota && !hasConflict;
         }.bind(this));
         const interested = [];
@@ -176,25 +172,13 @@ class Session {
         return prioritized.slice(0, 3);
     }
 
-    setAcceptancePercentage(percentage) {
-        if (percentage < 0 || percentage > 100) throw new Error("Percentage must be between 0 and 100");
-        this._acceptancePercentage = percentage;
+    setAcceptancePolicy(policy) {
+        this._acceptancePolicy = policy;
     }
-    acceptancePercentage() {
-        return this._acceptancePercentage;
+    acceptancePolicy() {
+        return this._acceptancePolicy;
     }
-    selectArticles() {
-        if (this.stage() !== SessionStatesEnum.SELECTION)
-            throw new Error("Cannot select articles at this stage");
 
-        let sortedPapers = [...this._papers].sort(function (a, b) {
-            return b.score() - a.score();
-        });
-
-        let maxAccepted = Math.floor(this._acceptancePercentage / 100 * this._papers.length);
-        this._acceptedPapers = sortedPapers.slice(0, maxAccepted);
-        return this._acceptedPapers;
-    }
     acceptedPapers() {
         return this._acceptedPapers;
     }

@@ -11,6 +11,9 @@ class Paper{
     title(){
         return this._title;
     }
+    authors(){
+        return this._authors;
+    }
     reviews(){
         return this._reviews;
     }
