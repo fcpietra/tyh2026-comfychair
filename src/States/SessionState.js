@@ -11,5 +11,6 @@ class SessionState {
     enterBid(paper, reviewer, interest) { throw new Error("Cannot enter bids from the current stage."); }
     submitReview(paper, reviewer, text, score) { throw new Error("Cannot review at this stage."); }
     selectArticles() { throw new Error("Cannot select articles at this stage"); }
+    updateSubmission(oldPaper, newPaper) { throw new Error("Cannot update submissions at this stage"); }
 }
 module.exports = SessionState;

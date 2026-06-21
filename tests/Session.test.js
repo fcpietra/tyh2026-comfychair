@@ -473,4 +473,60 @@ describe("When closing bidding, a Session", ()=>{
         expect(assigned).toContain(rev3);
         expect(assigned).toContain(rev4);
     })
+
+    describe("Paper submission updates", () => {
+        it("should allow updating a submitted paper while in Receiving stage", () => {
+            const session = new Session();
+            const author = new User("Author", "Univ", "a@test.com", "pass");
+            const paper = new Paper("Original Title", [author], author);
+            session.submit(paper);
+            expect(session.papers()).toContain(paper);
+
+            const updatedPaper = new Paper("Updated Title", [author], author);
+            session.updateSubmission(paper, updatedPaper);
+
+            expect(session.papers()).toContain(updatedPaper);
+            expect(session.papers()).not.toContain(paper);
+            expect(session.papers()).toHaveLength(1);
+        });
+
+        it("should throw an error when trying to update a paper that was not submitted", () => {
+            const session = new Session();
+            const author = new User("Author", "Univ", "a@test.com", "pass");
+            const paper = new Paper("Submitted Paper", [author], author);
+            const notSubmitted = new Paper("Not Submitted", [author], author);
+            session.submit(paper);
+
+            const updatedPaper = new Paper("Updated", [author], author);
+            expect(() => {
+                session.updateSubmission(notSubmitted, updatedPaper);
+            }).toThrow("Paper was not previously submitted");
+        });
+
+        it("should throw an error when trying to update with an invalid paper", () => {
+            const session = new Session();
+            const author = new User("Author", "Univ", "a@test.com", "pass");
+            const paper = new Paper("Original Title", [author], author);
+            session.submit(paper);
+
+            const invalidPaper = new Paper("", [author], author); // invalid title
+            expect(() => {
+                session.updateSubmission(paper, invalidPaper);
+            }).toThrow("Cannot submit invalid paper");
+        });
+
+        it("should throw an error when trying to update after the Receiving stage has closed", () => {
+            const session = new Session();
+            const author = new User("Author", "Univ", "a@test.com", "pass");
+            const paper = new Paper("Original Title", [author], author);
+            session.submit(paper);
+
+            session.close(); // Transitions to Bidding stage
+            const updatedPaper = new Paper("Updated Title", [author], author);
+
+            expect(() => {
+                session.updateSubmission(paper, updatedPaper);
+            }).toThrow("Cannot update submissions at this stage");
+        });
+    });
 })

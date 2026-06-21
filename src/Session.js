@@ -32,6 +32,9 @@ class Session {
     submit(paper) {
         this._state.submit(paper);
     }
+    updateSubmission(oldPaper, newPaper) {
+        this._state.updateSubmission(oldPaper, newPaper);
+    }
     submitReview(paper, reviewer, text, score) {
         this._state.submitReview(paper, reviewer, text, score);
     }
