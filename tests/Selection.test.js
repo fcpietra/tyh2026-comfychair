@@ -1,7 +1,7 @@
 const Session = require("../src/Session");
 const User = require("../src/User");
 const Paper = require("../src/Paper");
-const SessionStatesEnum = require("../src/Enums/SessionStatesEnum");
+const SelectionState = require("../src/States/SelectionState");
 const AcceptanceByCount = require("../src/Policies/AcceptanceByCount");
 const AcceptanceByScoreThreshold = require("../src/Policies/AcceptanceByScoreThreshold");
 const AcceptanceByPercentage = require("../src/Policies/AcceptanceByPercentage");
@@ -24,7 +24,7 @@ function setupSessionWithPapers(paperList, acceptancePercentage) {
         session.submit(paper);
     });
     session.setAcceptancePolicy(new AcceptanceByPercentage(acceptancePercentage));
-    session._setStage(SessionStatesEnum.SELECTION);
+    session._setStage(new SelectionState(session));
 }
 
 beforeEach(function () {
@@ -218,7 +218,7 @@ describe("Article selection - AcceptanceByCount Policy", function () {
         session.submit(p2);
         session.submit(p3);
         session.setAcceptancePolicy(new AcceptanceByCount(2));
-        session._setStage(SessionStatesEnum.SELECTION);
+        session._setStage(new SelectionState(session));
 
         let accepted = session.selectArticles();
         expect(accepted).toHaveLength(2);
@@ -233,7 +233,7 @@ describe("Article selection - AcceptanceByCount Policy", function () {
         session = new Session();
         session.submit(p1);
         session.setAcceptancePolicy(new AcceptanceByCount(5));
-        session._setStage(SessionStatesEnum.SELECTION);
+        session._setStage(new SelectionState(session));
 
         let accepted = session.selectArticles();
         expect(accepted).toHaveLength(1);
@@ -256,7 +256,7 @@ describe("Article selection - AcceptanceByScoreThreshold Policy", function () {
         session.submit(p2);
         session.submit(p3);
         session.setAcceptancePolicy(new AcceptanceByScoreThreshold(1.0));
-        session._setStage(SessionStatesEnum.SELECTION);
+        session._setStage(new SelectionState(session));
 
         let accepted = session.selectArticles();
         expect(accepted).toHaveLength(2);

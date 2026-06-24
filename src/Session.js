@@ -59,32 +59,8 @@ class Session {
     stage() {
         return this._state.stage();
     }
-    _setStage(stateOrEnum) {
-        if (typeof stateOrEnum === 'string') {
-            const SessionStatesEnum = require('./Enums/SessionStatesEnum');
-            switch (stateOrEnum) {
-                case SessionStatesEnum.RECEIVING:
-                    const ReceivingState = require("./States/ReceivingState");
-                    this._state = new ReceivingState(this);
-                    break;
-                case SessionStatesEnum.BIDDING:
-                    const BiddingState = require("./States/BiddingState");
-                    this._state = new BiddingState(this);
-                    break;
-                case SessionStatesEnum.REVISION:
-                    const RevisionState = require("./States/RevisionState");
-                    this._state = new RevisionState(this);
-                    break;
-                case SessionStatesEnum.SELECTION:
-                    const SelectionState = require("./States/SelectionState");
-                    this._state = new SelectionState(this);
-                    break;
-                default:
-                    this._state = stateOrEnum;
-            }
-        } else {
-            this._state = stateOrEnum;
-        }
+    _setStage(state) {
+        this._state = state;
     }
     
     bidExistsFor(paper, reviewer) {
