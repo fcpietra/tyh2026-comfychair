@@ -1,7 +1,7 @@
 const Session = require("../src/Session");
 const User = require("../src/User");
 const Paper = require("../src/Paper");
-const {Bid, Interests} = require("../src/Bid");
+const { Bid, Interests } = require("../src/Bid");
 const SessionStatesEnum = require("../src/Enums/SessionStatesEnum");
 
 let newSession;
@@ -9,7 +9,7 @@ let asse;
 let juan, julian, matias;
 let paper01, paper02, paper03;
 
-beforeEach( ()=> {
+beforeEach(() => {
     newSession = new Session();
     asse = new Session();
     juan = new User("Juan Gardey", "LIFIA, UNLP", "jgardey@lifia.ar", "123");
@@ -22,57 +22,57 @@ beforeEach( ()=> {
     paper03 = new Paper("Yet another approach on something", [authorA], authorA);
 });
 
-describe("A new Session", () =>{
-    it("should have an empty name", ()=> {
+describe("A new Session", () => {
+    it("should have an empty name", () => {
         expect(newSession.name()).toBe("");
     })
 
-    it("should have an empty Program Committee", ()=>{
+    it("should have an empty Program Committee", () => {
         expect(newSession.programCommittee()).toHaveLength(0);
     })
 })
 
-describe("A Session", ()=>{
-    it("should be able to add PC members.", ()=>{
+describe("A Session", () => {
+    it("should be able to add PC members.", () => {
         asse.addReviewer(juan);
         expect(asse.reviewers()).toContain(juan);
         expect(asse.reviewers()).toHaveLength(1);
     })
-    it("should allow paper submissions", ()=>{
+    it("should allow paper submissions", () => {
         expect(asse.canSubmit(paper01)).toBe(true);
         asse.submit(paper01);
         expect(asse.papers()).toContain(paper01);
     })
 })
 
-describe("During the bidding process, a Session", ()=>{
-    it("should receive bids", ()=>{
+describe("During the bidding process, a Session", () => {
+    it("should receive bids", () => {
         asse.close();
         asse.enterBid(paper02, juan, Interests.Interested);
         expect(asse.bidExistsFor(paper02, juan)).toBe(true);
         expect(asse.interestFor(paper02, juan)).toBe(Interests.Interested);
     })
-    it("should allow overriding bids", ()=>{
+    it("should allow overriding bids", () => {
         asse.close();
         asse.enterBid(paper02, juan, Interests.Interested);
-        const secondBid = () => {asse.enterBid(paper02, juan, Interests.Maybe)};
+        const secondBid = () => { asse.enterBid(paper02, juan, Interests.Maybe) };
         expect(secondBid).not.toThrow();
         expect(asse.interestFor(paper02, juan)).toBe(Interests.Maybe);
         expect(asse.bids()).toHaveLength(1);
     })
-    it("should not allow to receive submissions", ()=>{
+    it("should not allow to receive submissions", () => {
         asse.close();
         expect(asse.canSubmit(paper01)).toBe(false);
     })
-    it("should fail to receive submissions", ()=>{
+    it("should fail to receive submissions", () => {
         asse.close();
-        let submission = ()=>{asse.submit(paper01)};
+        let submission = () => { asse.submit(paper01) };
         expect(submission).toThrow();
     })
 })
 
-describe("During the reviewing process, a Session", ()=>{
-    beforeEach(()=>{
+describe("During the reviewing process, a Session", () => {
+    beforeEach(() => {
         asse.addReviewer(juan);
         asse.addReviewer(julian);
         asse.addReviewer(matias);
@@ -81,40 +81,40 @@ describe("During the reviewing process, a Session", ()=>{
         asse.close();
     })
 
-    it("should accept a review on an assigned paper", ()=>{
+    it("should accept a review on an assigned paper", () => {
         asse.submitReview(paper01, julian, "Solid contribution", 2);
         expect(paper01.reviews()).toHaveLength(1);
         expect(paper01.score()).toBe(2);
     })
 
-    it("should reject reviews when not in Reviewing stage", ()=>{
+    it("should reject reviews when not in Reviewing stage", () => {
         const newSession = new Session();
         newSession.submit(paper02);
-        let earlyReview = ()=>{newSession.submitReview(paper02, julian, "ok", 1)};
+        let earlyReview = () => { newSession.submitReview(paper02, julian, "ok", 1) };
         expect(earlyReview).toThrow("Cannot review at this stage.");
     })
 
-    it("should reject a fourth review on the same paper", ()=>{
+    it("should reject a fourth review on the same paper", () => {
         asse.submitReview(paper01, juan, "ok", 1);
         asse.submitReview(paper01, julian, "ok", 2);
         asse.submitReview(paper01, matias, "ok", 3);
-        let fourth = ()=>{asse.submitReview(paper01, julian, "extra", 0)};
+        let fourth = () => { asse.submitReview(paper01, julian, "extra", 0) };
         expect(fourth).toThrow("Cannot allow any more reviews");
     })
 
-    it("should reject reviews with invalid score", ()=>{
-        let invalidScore = ()=>{asse.submitReview(paper01, julian, "ok", 5)};
+    it("should reject reviews with invalid score", () => {
+        let invalidScore = () => { asse.submitReview(paper01, julian, "ok", 5) };
         expect(invalidScore).toThrow("Score is out of range");
     })
 
-    it("should reject a review from a reviewer not assigned to the paper", ()=>{
+    it("should reject a review from a reviewer not assigned to the paper", () => {
         const carlos = new User("Carlos Pereira", "LIFIA, UNLP", "cpereira@lifia.ar", "123");
-        let unassignedReview = ()=>{asse.submitReview(paper01, carlos, "ok", 1)};
+        let unassignedReview = () => { asse.submitReview(paper01, carlos, "ok", 1) };
         expect(unassignedReview).toThrow("Reviewer is not assigned to this paper.");
     })
 })
-describe("When closing bidding, a Session", ()=>{
-    it("should change stage to Revision", ()=>{
+describe("When closing bidding, a Session", () => {
+    it("should change stage to Revision", () => {
         asse.addReviewer(juan);
         asse.addReviewer(julian);
         asse.addReviewer(matias);
@@ -124,7 +124,7 @@ describe("When closing bidding, a Session", ()=>{
         expect(asse.stage()).toBe(SessionStatesEnum.REVISION);
     })
 
-    it("should throw error if not in closeable stage", ()=>{
+    it("should throw error if not in closeable stage", () => {
         asse.addReviewer(juan);
         asse.addReviewer(julian);
         asse.addReviewer(matias);
@@ -135,10 +135,10 @@ describe("When closing bidding, a Session", ()=>{
         asse.submitReview(paper01, julian, "ok", 2);
         asse.submitReview(paper01, matias, "ok", 3);
         asse.close(); // REVISION -> SELECTION
-        expect(function() { asse.close(); }).toThrow("Cannot close from the current stage.");
+        expect(function () { asse.close(); }).toThrow("Cannot close from the current stage.");
     })
 
-    it("should assign exactly 3 reviewers per paper", ()=>{
+    it("should assign exactly 3 reviewers per paper", () => {
         const session = new Session();
         const reviewers = [];
         for (let i = 0; i < 6; i++) {
@@ -158,12 +158,12 @@ describe("When closing bidding, a Session", ()=>{
         session.close();
         session.close();
 
-        papers.forEach(function(paper) {
+        papers.forEach(function (paper) {
             expect(session.assignmentsFor(paper)).toHaveLength(3);
         });
     })
 
-    it("should distribute quotas with remainder correctly (exact division)", ()=>{
+    it("should distribute quotas with remainder correctly (exact division)", () => {
         // 6 papers, 6 reviewers => 18 reviews, 18/6 = 3 each, remainder 0
         const session = new Session();
         const reviewers = [];
@@ -186,19 +186,19 @@ describe("When closing bidding, a Session", ()=>{
 
         // Each reviewer should have exactly 3 assignments
         const counts = new Map();
-        reviewers.forEach(function(r) { counts.set(r, 0); });
-        papers.forEach(function(paper) {
-            session.assignmentsFor(paper).forEach(function(reviewer) {
+        reviewers.forEach(function (r) { counts.set(r, 0); });
+        papers.forEach(function (paper) {
+            session.assignmentsFor(paper).forEach(function (reviewer) {
                 counts.set(reviewer, counts.get(reviewer) + 1);
             });
         });
 
-        reviewers.forEach(function(reviewer) {
+        reviewers.forEach(function (reviewer) {
             expect(counts.get(reviewer)).toBe(3);
         });
     })
 
-    it("should distribute quotas with remainder correctly (with remainder)", ()=>{
+    it("should distribute quotas with remainder correctly (with remainder)", () => {
         // Enunciado example: 10 papers, 7 reviewers => 30 reviews
         // 30/7 = 4 base, remainder 2 => 2 reviewers do 5, 5 reviewers do 4
         const session = new Session();
@@ -222,9 +222,9 @@ describe("When closing bidding, a Session", ()=>{
 
         // Count assignments per reviewer
         const counts = new Map();
-        reviewers.forEach(function(r) { counts.set(r, 0); });
-        papers.forEach(function(paper) {
-            session.assignmentsFor(paper).forEach(function(reviewer) {
+        reviewers.forEach(function (r) { counts.set(r, 0); });
+        papers.forEach(function (paper) {
+            session.assignmentsFor(paper).forEach(function (reviewer) {
                 counts.set(reviewer, counts.get(reviewer) + 1);
             });
         });
@@ -232,7 +232,7 @@ describe("When closing bidding, a Session", ()=>{
         // Total reviews must equal 30
         let totalAssigned = 0;
         const countValues = [];
-        reviewers.forEach(function(reviewer) {
+        reviewers.forEach(function (reviewer) {
             const c = counts.get(reviewer);
             countValues.push(c);
             totalAssigned += c;
@@ -240,24 +240,24 @@ describe("When closing bidding, a Session", ()=>{
         expect(totalAssigned).toBe(30);
 
         // Each reviewer does at most ceil(30/7)=5 and at least floor(30/7)=4
-        countValues.forEach(function(c) {
+        countValues.forEach(function (c) {
             expect(c).toBeGreaterThanOrEqual(4);
             expect(c).toBeLessThanOrEqual(5);
         });
 
         // Exactly 2 reviewers do 5 and 5 reviewers do 4
-        const doingFive = countValues.filter(function(c) { return c === 5; }).length;
-        const doingFour = countValues.filter(function(c) { return c === 4; }).length;
+        const doingFive = countValues.filter(function (c) { return c === 5; }).length;
+        const doingFour = countValues.filter(function (c) { return c === 4; }).length;
         expect(doingFive).toBe(2);
         expect(doingFour).toBe(5);
 
         // Each paper still has exactly 3
-        papers.forEach(function(paper) {
+        papers.forEach(function (paper) {
             expect(session.assignmentsFor(paper)).toHaveLength(3);
         });
     })
 
-    it("should prioritize Interested reviewers first", ()=>{
+    it("should prioritize Interested reviewers first", () => {
         // 2 papers, 4 reviewers => 6 reviews, 6/4 = 1 base, remainder 2
         // First 2 reviewers get quota 2, last 2 get quota 1
         // All have enough quota to be assigned to at least 1 paper
@@ -296,7 +296,7 @@ describe("When closing bidding, a Session", ()=>{
         expect(assigned).not.toContain(rev1);
     })
 
-    it("should fall back to Maybe when not enough Interested", ()=>{
+    it("should fall back to Maybe when not enough Interested", () => {
         const session = new Session();
         const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
         const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
@@ -328,7 +328,7 @@ describe("When closing bidding, a Session", ()=>{
         expect(assigned).not.toContain(rev4);
     })
 
-    it("should fall back to reviewers with no bid before NotInterested", ()=>{
+    it("should fall back to reviewers with no bid before NotInterested", () => {
         const session = new Session();
         const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
         const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
@@ -361,19 +361,19 @@ describe("When closing bidding, a Session", ()=>{
         expect(assigned).not.toContain(rev4);
     })
 
-    it("should not allow bids after closing bidding", ()=>{
+    it("should not allow bids after closing bidding", () => {
         asse.addReviewer(juan);
         asse.addReviewer(julian);
         asse.addReviewer(matias);
         asse.submit(paper01);
         asse.close();
         asse.close();
-        expect(function() {
+        expect(function () {
             asse.enterBid(paper01, juan, Interests.Interested);
         }).toThrow();
     })
 
-    it("should not assign a reviewer who declared Conflict on a paper", ()=>{
+    it("should not assign a reviewer who declared Conflict on a paper", () => {
         const session = new Session();
         const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
         const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
@@ -407,7 +407,7 @@ describe("When closing bidding, a Session", ()=>{
         expect(assigned).not.toContain(rev1);
     })
 
-    it("should still assign a reviewer with Conflict on one paper to other papers", ()=>{
+    it("should still assign a reviewer with Conflict on one paper to other papers", () => {
         const session = new Session();
         const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
         const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
@@ -437,7 +437,7 @@ describe("When closing bidding, a Session", ()=>{
         expect(session.assignmentsFor(paper2)).toContain(rev1);
     })
 
-    it("should allow a reviewer to declare Conflict during bidding", ()=>{
+    it("should allow a reviewer to declare Conflict during bidding", () => {
         asse.addReviewer(juan);
         asse.submit(paper01);
         asse.close();
@@ -447,7 +447,7 @@ describe("When closing bidding, a Session", ()=>{
         expect(asse.interestFor(paper01, juan)).toBe(Interests.Conflict);
     })
 
-    it("should not assign a reviewer who is an author of the paper (automatic conflict of interest)", ()=>{
+    it("should not assign a reviewer who is an author of the paper (automatic conflict of interest)", () => {
         const session = new Session();
         const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
         const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
@@ -469,6 +469,34 @@ describe("When closing bidding, a Session", ()=>{
         const assigned = session.assignmentsFor(paper1);
         expect(assigned).toHaveLength(3);
         expect(assigned).not.toContain(rev1);
+        expect(assigned).toContain(rev2);
+        expect(assigned).toContain(rev3);
+        expect(assigned).toContain(rev4);
+    })
+
+    it("should not assign a reviewer who is an author of the paper even if they are different User instances with the same email", () => {
+        const session = new Session();
+        const rev1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
+        const authorOfP1 = new User("Rev 1", "Univ", "r1@test.com", "pass");
+        const rev2 = new User("Rev 2", "Univ", "r2@test.com", "pass");
+        const rev3 = new User("Rev 3", "Univ", "r3@test.com", "pass");
+        const rev4 = new User("Rev 4", "Univ", "r4@test.com", "pass");
+        session.addReviewer(rev1);
+        session.addReviewer(rev2);
+        session.addReviewer(rev3);
+        session.addReviewer(rev4);
+
+        const otherAuthor = new User("Other Author", "Univ", "other@test.com", "pass");
+        const paper1 = new Paper("Paper 1", [authorOfP1], authorOfP1);
+        const paper2 = new Paper("Paper 2", [otherAuthor], otherAuthor);
+        session.submit(paper1);
+        session.submit(paper2);
+        session.close();
+        session.close();
+
+        const assigned = session.assignmentsFor(paper1);
+        expect(assigned).toHaveLength(3);
+        expect(assigned.some(r => r.email === "r1@test.com")).toBe(false);
         expect(assigned).toContain(rev2);
         expect(assigned).toContain(rev3);
         expect(assigned).toContain(rev4);
