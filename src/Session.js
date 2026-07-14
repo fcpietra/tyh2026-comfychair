@@ -24,7 +24,7 @@ class Session {
     addReviewer(user) {
         this._programCommittee.push(user);
     }
-    
+
     // Delegated to State
     canSubmit(paper) {
         return this._state.canSubmit(paper);
@@ -50,7 +50,7 @@ class Session {
     }
 
     // Accessors
-    papers(){
+    papers() {
         return this._papers;
     }
     bids() {
@@ -62,7 +62,7 @@ class Session {
     _setStage(state) {
         this._state = state;
     }
-    
+
     bidExistsFor(paper, reviewer) {
         return typeof (this.bidFor(paper, reviewer)) != "undefined";
     }
@@ -115,7 +115,7 @@ class Session {
     _selectReviewersForPaper(paper, quotas, assignmentCounts) {
         const available = this._programCommittee.filter(function (reviewer) {
             const hasQuota = assignmentCounts.get(reviewer) < quotas.get(reviewer);
-            const isAuthor = paper.authors && paper.authors().includes(reviewer);
+            const isAuthor = paper.authors && paper.authors().some(author => author.email === reviewer.email);
             const hasConflict = (this.bidExistsFor(paper, reviewer)
                 && this.interestFor(paper, reviewer) === Interests.Conflict) || isAuthor;
             return hasQuota && !hasConflict;
